@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>File System Simulator | KernelLab</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">FS</div>
+        <div><strong>Kernel<span>Lab</span></strong><small>OPERATING SYSTEMS</small></div>
+      </div>
+      <div class="side-label">WORKSPACE</div>
+      <button type="button" class="nav-item active" data-view="explorer"><span>▦</span> File Explorer</button>
+      <button type="button" class="nav-item" data-view="disk"><span>▤</span> Disk Manager</button>
+      <button type="button" class="nav-item" data-view="permissions"><span>♙</span> Permissions</button>
+      <div class="sidebar-bottom">
+        <div class="status-dot"></div>
+        <div><strong>Simulator online</strong><small>Saved to data/disk.json</small></div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <div class="eyebrow">OS LAB / PROJECT 01</div>
+          <h1 id="page-title">File Explorer</h1>
+        </div>
+        <div class="top-actions">
+          <span class="pill">SYSTEM READY</span>
+          <button type="button" class="button button-primary" id="new-file-top">＋ New file</button>
+        </div>
+      </header>
+
+      <section class="stats-grid">
+        <article class="stat-card"><div class="stat-label">TOTAL ITEMS</div><div class="stat-value" id="stat-items">0</div><div class="stat-foot">Files and directories</div><div class="stat-icon">▧</div></article>
+        <article class="stat-card"><div class="stat-label">DISK UTILIZATION</div><div class="stat-value"><span id="stat-used">0</span><span class="unit">%</span></div><div class="progress"><span id="disk-progress"></span></div><div class="stat-foot" id="stat-blocks">0 of 100 blocks used</div><div class="stat-icon">◫</div></article>
+        <article class="stat-card"><div class="stat-label">FREE SPACE</div><div class="stat-value"><span id="stat-free">100</span><span class="unit"> blocks</span></div><div class="stat-foot">64 characters per block</div><div class="stat-icon">▤</div></article>
+        <article class="stat-card"><div class="stat-label">CURRENT DIRECTORY</div><div class="stat-value path-stat" id="stat-path">/</div><div class="stat-foot">Active location</div><div class="stat-icon">⌂</div></article>
+      </section>
+
+      <section class="view" id="explorer-view">
+        <div class="content-grid">
+          <section class="panel explorer-panel">
+            <div class="panel-heading">
+              <div><h2>File explorer</h2><p>Manage your virtual file system</p></div>
+              <div class="button-row"><button type="button" class="button button-secondary" id="new-folder">＋ Folder</button><button type="button" class="button button-primary" id="new-file">＋ File</button></div>
+            </div>
+            <div class="breadcrumb" id="breadcrumb"></div>
+            <div class="table-head"><span>NAME</span><span>TYPE</span><span>SIZE</span><span>PERMISSIONS</span><span>ACTIONS</span></div>
+            <div id="file-list" class="file-list"></div>
+            <div class="panel-foot"><span id="item-count">0 items</span><span>📁 Directory · 📄 File</span></div>
+          </section>
+          <aside class="panel details-panel">
+            <div class="panel-heading"><div><h2>Item details</h2><p>Selection inspector</p></div></div>
+            <div id="empty-details" class="empty-state"><strong>No item selected</strong><p>Select a file or folder to inspect its metadata.</p></div>
+            <div id="item-details" hidden>
+              <h3 id="detail-name">—</h3><p id="detail-path" class="muted">—</p>
+              <div class="detail-list">
+                <div><span>Type</span><strong id="detail-type">—</strong></div>
+                <div><span>Size</span><strong id="detail-size">—</strong></div>
+                <div><span>Disk blocks</span><strong id="detail-blocks">—</strong></div>
+                <div><span>Permissions</span><strong id="detail-perms">—</strong></div>
+              </div>
+              <button type="button" class="button button-secondary full" id="detail-open">Open / Edit</button>
+              <button type="button" class="button button-danger full" id="detail-delete">Delete item</button>
+            </div>
+            <div class="mini-tip"><strong>OS concept</strong><p>Directories map names to nodes. Files store content and references to allocated disk blocks.</p></div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="view" id="disk-view" hidden>
+        <div class="panel disk-panel">
+          <div class="panel-heading"><div><h2>Disk block manager</h2><p>Contiguous allocation · 100 simulated blocks · 64 characters per block</p></div><span class="pill">VIRTUAL DISK</span></div>
+          <div class="disk-summary"><div><span>Used blocks</span><strong id="disk-used-big">0</strong></div><div><span>Free blocks</span><strong id="disk-free-big">100</strong></div><div><span>Capacity</span><strong>6,400 chars</strong></div></div>
+          <div class="disk-legend"><span>■ Allocated</span><span>□ Free</span></div>
+          <div id="block-grid" class="block-grid"></div>
+          <div class="panel-foot"><span>Each square represents one disk block.</span><button type="button" class="button button-secondary" id="refresh-disk">Refresh map</button></div>
+        </div>
+        <div class="panel"><div class="panel-heading"><div><h2>Allocation table</h2><p>Files currently occupying disk blocks</p></div></div><div id="allocation-table"></div></div>
+      </section>
+
+      <section class="view" id="permissions-view" hidden>
+        <div class="panel">
+          <div class="panel-heading"><div><h2>Permissions manager</h2><p>Configure read, write, and execute flags</p></div></div>
+          <div class="permission-note"><strong>r</strong> read content · <strong>w</strong> modify content / create or delete children · <strong>x</strong> enter a directory. Simplified single-user model.</div>
+          <div id="permissions-table"></div>
+        </div>
+      </section>
+
+      <footer><span>KernelLab • File System Simulator</span><span>Node.js backend · Data saved on the server</span></footer>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+  <dialog id="item-dialog">
+    <form method="dialog" id="item-form">
+      <div class="modal-head"><div><div class="eyebrow">FILE SYSTEM OPERATION</div><h2 id="modal-title">Create file</h2></div><button class="icon-button" value="cancel" formnovalidate aria-label="Close">×</button></div>
+      <div id="modal-fields"></div>
+      <div class="modal-actions"><button class="button button-secondary" value="cancel" formnovalidate>Cancel</button><button type="submit" class="button button-primary" id="modal-submit" value="default">Confirm</button></div>
+    </form>
+  </dialog>
+  <script src="app.js"></script>
+</body>
+</html>
